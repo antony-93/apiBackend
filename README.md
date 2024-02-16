@@ -35,4 +35,28 @@ Use o comando `dotnet run`  para iniciar a aplicação!
 
 ATENÇÃO: Certifique-se de ter instalado em sua maquina o .NET na versão 5.0!
 
+### Rotas da aplicação 
+
+GET http://localhost:5000/api/Cliente
+GET http://localhost:5000/api/Cliente/idAqui
+
+DELETE http://localhost:5000/api/Cliente/idAqui
+
+POST http://localhost:5000/api/Cliente
+{
+    "nome": "nomeAqui",
+    "cnpj": 00000000000000,
+    "endereco": "enderecoAqui",
+    "telefone": 48996686585
+}
+
+PUT http://localhost:5000/api/Cliente/id aqui
+{
+    "nome": "nomeAqui",
+    "cnpj": 00000000000000,
+    "endereco": "enderecoAqui",
+    "telefone": 48996686585
+}
+
+
 
