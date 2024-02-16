@@ -12,6 +12,7 @@ ATENÇÃO: Certifique-se de ter instalado em sua maquina o .NET na versão 5.0 e
 
 Execute esses comandos sql para gerar a tabela no postgreSQL!
 
+```sql
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE cliente (
