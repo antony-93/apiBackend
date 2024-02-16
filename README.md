@@ -23,6 +23,7 @@ CREATE TABLE cliente (
     endereco VARCHAR(255),
     telefone BIGINT
 );
+```
 
 ### Configurando a aplicação
 
