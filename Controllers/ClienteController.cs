@@ -28,14 +28,14 @@ namespace apiBackend.Controllers
         {
             try
             {
-                List<Cliente> resFind = await _clienteService.doLoadClients();
+                ResStatus resFind = await _clienteService.doLoadClients();
 
-                if (resFind == null)
+                if (resFind.failed)
                 {
                     return BadRequest("Não foi possível consultar os clientes!");
                 }
 
-                return Ok(resFind);
+                return Ok(resFind.manyClientes);
             }
             catch (Exception ex)
             {
@@ -53,14 +53,14 @@ namespace apiBackend.Controllers
                     return BadRequest("Código inválido ou não preenchido!");
                 }
 
-                Cliente resFind = await _clienteService.doLoadClientById(id);
+                ResStatus resFind = await _clienteService.doLoadClientById(id);
 
-                if (resFind == null)
+                if (resFind.cliente == null || resFind.failed)
                 {
                     return NotFound("Cliente inválido ou não cadastrado!");
                 }
 
-                return Ok(resFind);
+                return Ok(resFind.cliente);
             }
             catch (Exception ex)
             {
@@ -82,21 +82,25 @@ namespace apiBackend.Controllers
                     return BadRequest("Cnpj inválido ou não informado!");
                 }
 
-                Cliente resFindClientCnpj = await _clienteService.doLoadClientByCnpj(clienteDTO.cnpj);
+                ResStatus resFindClientCnpj = await _clienteService.doLoadClientByCnpj(clienteDTO.cnpj);
 
-                if (resFindClientCnpj != null)
+                if (resFindClientCnpj.failed) {
+                    return NotFound("Não foi possível validar o CNPJ, tente novamente mais tarde!");
+                }
+
+                if (resFindClientCnpj.cliente != null)
                 {
                     return BadRequest("Cnpj informado ja está cadastrado!");
                 }
 
-                var resSave = await _clienteService.doSaveClient(clienteDTO);
+                ResStatus resSave = await _clienteService.doSaveClient(clienteDTO);
 
-                if (resSave == null)
+                if (resSave.cliente == null || resSave.failed)
                 {
                     return BadRequest("Não foi possível cadastrar o novo cliente!");
                 }
 
-                return CreatedAtAction(nameof(doCreateClient), resSave);
+                return CreatedAtAction(nameof(doCreateClient), resSave.cliente);
 
             }
             catch (Exception ex)
@@ -119,14 +123,14 @@ namespace apiBackend.Controllers
                     return BadRequest("Código inválido ou não informado!");
                 }
 
-                Cliente resFindClient = await _clienteService.doLoadClientById(id);
+                ResStatus resFindClient = await _clienteService.doLoadClientById(id);
 
-                if (resFindClient == null)
+                if (resFindClient.cliente == null || resFindClient.failed)
                 {
                     return NotFound("Cliente inválido ou não cadastrado!");
                 }
 
-                bool resDelete = await _clienteService.doRemoveClient(resFindClient);
+                bool resDelete = await _clienteService.doRemoveClient(resFindClient.cliente);
 
                 if (!resDelete)
                 {
@@ -155,9 +159,9 @@ namespace apiBackend.Controllers
                     return BadRequest("Código inválido ou não informado!");
                 }
 
-                Cliente resFindClient = await _clienteService.doLoadClientById(id);
+                ResStatus resFindClient = await _clienteService.doLoadClientById(id);
 
-                if (resFindClient == null)
+                if (resFindClient.cliente == null || resFindClient.failed)
                 {
                     return NotFound("Cliente inválido ou não cadastrado!");
                 }
@@ -167,21 +171,25 @@ namespace apiBackend.Controllers
                     return BadRequest("Cnpj inválido ou não informado!");
                 }
 
-                Cliente resFindClientCnpj = await _clienteService.doLoadClientByCnpj(clienteDTO.cnpj);
+                ResStatus resFindClientCnpj = await _clienteService.doLoadClientByCnpj(clienteDTO.cnpj);
 
-                if (resFindClientCnpj != null && resFindClientCnpj.id != id)
+                if (resFindClient.failed) {
+                    return NotFound("Não foi possível validar o CNPJ, tente novamente mais tarde!");
+                }
+
+                if (resFindClientCnpj.cliente != null && resFindClientCnpj.cliente.id != id)
                 {
                     return BadRequest("Cnpj informado ja está cadastrado!");
                 }
 
-                var resUpdate = await _clienteService.doUpdateClient(clienteDTO, resFindClient);
+                ResStatus resUpdate = await _clienteService.doUpdateClient(clienteDTO, resFindClient.cliente);
 
-                if (resUpdate == null)
+                if (resUpdate.failed || resUpdate.cliente == null)
                 {
                     return BadRequest("Não foi possível atualizar o cliente!");
                 }
 
-                return Ok(resUpdate);
+                return Ok(resUpdate.cliente);
             }
             catch (Exception ex)
             {

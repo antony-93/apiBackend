@@ -10,17 +10,17 @@ namespace apiBackend.Services
 {
     public interface IClienteService
     {
-        Task<Cliente> doSaveClient(ClienteDTO clientDTO);
+        Task<ResStatus> doSaveClient(ClienteDTO clientDTO);
 
-        Task<List<Cliente>> doLoadClients();
+        Task<ResStatus> doLoadClients();
 
-        Task<Cliente> doLoadClientById(Guid clientId);
+        Task<ResStatus> doLoadClientById(Guid clientId);
 
-        Task<Cliente> doLoadClientByCnpj(long cnpj);
+        Task<ResStatus> doLoadClientByCnpj(long cnpj);
 
         Task<bool> doRemoveClient(Cliente client);
 
-        Task<Cliente> doUpdateClient(ClienteDTO clientDTO, Cliente client);
+        Task<ResStatus> doUpdateClient(ClienteDTO clientDTO, Cliente client);
     }
 
     public class ClienteService : IClienteService
@@ -46,7 +46,17 @@ namespace apiBackend.Services
             return newClient;
         }
 
-        private bool doValidateClient(Cliente client) {
+        private ResStatus doFormatResStatus(bool failed, Cliente? cliente, List<Cliente>? clients)
+        {
+            return new ResStatus(
+                failed: failed,
+                cliente: cliente,
+                manyClientes: clients
+            );
+        }
+
+        private bool doValidateClient(Cliente client)
+        {
             bool isValid = false;
 
             if (client.cnpj != null && !string.IsNullOrEmpty(client.nome)) isValid = true;
@@ -58,47 +68,61 @@ namespace apiBackend.Services
 
         #region === FUNÇÕES DE CONSULTA ===
 
-        public async Task<List<Cliente>> doLoadClients()
+        public async Task<ResStatus> doLoadClients()
         {
+            ResStatus newResFind = this.doFormatResStatus(true, null, null);
+
             try
             {
-                return await _dbContext.cliente.ToListAsync();
+                List<Cliente> resFind = await _dbContext.cliente.ToListAsync();
+
+                newResFind = this.doFormatResStatus(false, null, resFind);
+
+                return newResFind;
             }
             catch (Exception ex)
             {
-                return null;
+                return newResFind;
             }
         }
 
-        public async Task<Cliente> doLoadClientById(Guid clientId)
+        public async Task<ResStatus> doLoadClientById(Guid clientId)
         {
+            ResStatus newResSave = this.doFormatResStatus(true, null, null);
+
             try
             {
                 if (clientId == Guid.Empty) return null;
 
                 Cliente resFindClient = await _dbContext.cliente.FindAsync(clientId);
 
-                return resFindClient;
+                newResSave = this.doFormatResStatus(false, resFindClient, null);
+
+                return newResSave;
             }
             catch (Exception ex)
             {
-                return null;
+                return newResSave;
             }
         }
 
-        public async Task<Cliente> doLoadClientByCnpj(long cnpj)
+        public async Task<ResStatus> doLoadClientByCnpj(long cnpj)
         {
+            ResStatus newResSave = this.doFormatResStatus(true, null, null);
+
             try
             {
                 if (cnpj == null) return null;
 
                 Cliente resFindClient = await _dbContext.cliente.FirstOrDefaultAsync(c => c.cnpj == cnpj);
 
-                return resFindClient;
+                newResSave = this.doFormatResStatus(false, resFindClient, null);
+
+                return newResSave;
             }
             catch (Exception ex)
             {
-                return null;
+                return newResSave;
             }
         }
 
@@ -106,8 +130,10 @@ namespace apiBackend.Services
 
         #region === FUNÇÕES DE CADASTRO ===
 
-        public async Task<Cliente> doSaveClient(ClienteDTO clienteDTO)
+        public async Task<ResStatus> doSaveClient(ClienteDTO clienteDTO)
         {
+            ResStatus newResSave = this.doFormatResStatus(true, null, null);
+
             try
             {
                 if (clienteDTO == null) return null;
@@ -120,11 +146,13 @@ namespace apiBackend.Services
 
                 await _dbContext.SaveChangesAsync();
 
-                return newClient;
+                newResSave = this.doFormatResStatus(false, newClient, null);
+
+                return newResSave;
             }
             catch (Exception ex)
             {
-                return null;
+                return newResSave;
             }
         }
 
@@ -154,23 +182,28 @@ namespace apiBackend.Services
 
         #region === FUNÇÕES DE UPDATE ===
 
-        public async Task<Cliente> doUpdateClient(ClienteDTO clienteDTO, Cliente client)
+        public async Task<ResStatus> doUpdateClient(ClienteDTO clienteDTO, Cliente client)
         {
+            ResStatus newResUpdate = this.doFormatResStatus(true, null, null);
+
             try
             {
-                if (clienteDTO == null || client == null) return null;
+
+                if (clienteDTO == null || client == null) return newResUpdate;
 
                 Cliente newClient = this.doFormatClient(clienteDTO, client);
 
-                if (!this.doValidateClient(newClient)) return null;
+                if (!this.doValidateClient(newClient)) return newResUpdate;
 
                 await _dbContext.SaveChangesAsync();
 
-                return newClient;
+                newResUpdate = this.doFormatResStatus(false, newClient, null);
+
+                return newResUpdate;
             }
             catch (Exception ex)
             {
-                return null;
+                return newResUpdate;
             }
         }
 
